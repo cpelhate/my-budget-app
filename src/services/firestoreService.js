@@ -2,9 +2,7 @@ import {
   collection, 
   getDocs, 
   setDoc, 
-  doc, 
-  query, 
-  where 
+  doc
 } from 'firebase/firestore';
 import { db } from '../config/firebase';
 
@@ -23,7 +21,7 @@ export const saveDataToFirestore = async (userId, data) => {
 // Charger les données depuis Firestore
 export const loadDataFromFirestore = async (userId) => {
   try {
-    const docRef = doc(db, 'users', userId, 'data', 'budget');
+    
     const docSnap = await getDocs(collection(db, 'users', userId, 'data'));
     
     if (docSnap.empty) {
