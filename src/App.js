@@ -13,6 +13,8 @@ import Settings from './components/Settings';
 
 import { loadDataFromStorage, saveDataToStorage } from './utils/storage';
 import { saveDataToFirestore, loadDataFromFirestore } from './services/firestoreService';
+//import ChartContainer from './components/ChartContainer';
+
 
 function App() {
   const [user, setUser] = useState(null);
