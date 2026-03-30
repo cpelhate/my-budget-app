@@ -1,6 +1,8 @@
 import React from 'react';
 import { updatePassword, reauthenticateWithCredential, EmailAuthProvider } from 'firebase/auth';
 
+export default Settings;
+
 function Settings({ data, setData }) {
   const handleClearAllData = () => {
     if (window.confirm('⚠️ Êtes-vous sûr ? Cette action supprimera TOUTES vos données !')) {
@@ -71,6 +73,7 @@ function Settings({ data, setData }) {
         setLoading(false);
       }
     };
+  
 
   return (
     <div className="page-container">
@@ -144,6 +147,4 @@ function Settings({ data, setData }) {
 
     </div>
   );
-}
-
-export default Settings;
+  }}
