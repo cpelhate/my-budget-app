@@ -4,7 +4,7 @@ import { auth } from '../config/firebase';
 
 function Login({ user, onLoginSuccess }) {
   const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [passwordStrength, setPasswordStrength] = useState(null);
   const [isLogin, setIsLogin] = useState(true);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -85,13 +85,24 @@ function Login({ user, onLoginSuccess }) {
 
           <div className="form-group">
             <label>Mot de passe</label>
-            <input
+            <input 
               type="password"
-              placeholder="Minimum 6 caractères"
               value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
+              onChange={(e) => {
+                setPassword(e.target.value);
+                const result = validatePassword(e.target.value);
+                setPasswordStrength(result);
+              }}
+              className={`form-input ${passwordStrength?.isValid ? 'valid' : passwordStrength?.errors.length === 0 ? '' : 'invalid'}`}
             />
+            {passwordStrength && (
+              <div className={`password-strength ${passwordStrength.strength}`}>
+                <div className="strength-bar">
+                  <div className={`bar-${passwordStrength.strength}`}></div>
+                </div>
+                <small>{passwordStrength.isValid ? '✅ Mot de passe valide' : passwordStrength.errors.join(', ')}</small>
+              </div>
+            )}
           </div>
 
           <button 
