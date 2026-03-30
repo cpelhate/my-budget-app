@@ -1,3 +1,13 @@
+
+/* eslint-disable no-unused-vars */
+import { 
+  collection, 
+  getDocs, 
+  setDoc, 
+  doc 
+} from 'firebase/firestore';
+import { db } from '../config/firebase';
+
 import { 
   collection, 
   getDocs, 
