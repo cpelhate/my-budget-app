@@ -5,6 +5,7 @@ import { auth } from '../config/firebase';
 
 function Login({ user, onLoginSuccess }) {
   const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [passwordStrength, setPasswordStrength] = useState(null);
   const [isLogin, setIsLogin] = useState(true);
   const [loading, setLoading] = useState(false);
