@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut } from 'firebase/auth';
 import { auth } from '../config/firebase';
+import { sendPasswordResetEmail } from 'firebase/auth';
+import { auth } from '../config/firebase';
 
 function Login({ user, onLoginSuccess }) {
   const [email, setEmail] = useState('');
@@ -8,6 +10,8 @@ function Login({ user, onLoginSuccess }) {
   const [isLogin, setIsLogin] = useState(true);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [showResetModal, setShowResetModal] = useState(false);
+  const [resetEmail, setResetEmail] = useState('');
 
   const handleAuth = async (e) => {
     e.preventDefault();
@@ -49,6 +53,16 @@ function Login({ user, onLoginSuccess }) {
     } catch (err) {
       setError(err.message);
     }
+  };
+
+  const handlePasswordReset = async () => {
+  try {
+    await sendPasswordResetEmail(auth, resetEmail);
+    alert('Email de réinitialisation envoyé !');
+    setShowResetModal(false);
+  } catch (error) {
+    alert('Erreur : ' + error.message);
+  }
   };
 
   if (user) {
@@ -113,6 +127,36 @@ function Login({ user, onLoginSuccess }) {
             {loading ? '⏳ Chargement...' : (isLogin ? '🔓 Connexion' : '✅ S\'inscrire')}
           </button>
         </form>
+
+        <div className="login-footer">
+          <a href="#" onClick={(e) => {e.preventDefault(); setShowResetModal(true);}}>
+           Mot de passe oublié ?
+           </a>
+        </div>
+
+        // Modal Réinitialisation du mot de passe
+        {showResetModal && (
+          <div className="modal-overlay">
+            <div className="modal">
+              <h3>Réinitialiser le mot de passe</h3>
+              <input 
+                type="email" 
+                placeholder="Votre email"
+                value={resetEmail}
+                onChange={(e) => setResetEmail(e.target.value)}
+                className="form-input"
+              />
+              <div className="modal-actions">
+                <button className="btn-secondary" onClick={() => setShowResetModal(false)}>
+                  Annuler
+                </button>
+                <button className="btn-primary" onClick={handlePasswordReset}>
+                  Envoyer
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         <p className="auth-toggle">
           {isLogin ? "Pas encore inscrit ? " : "Déjà inscrit ? "}
