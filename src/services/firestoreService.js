@@ -8,14 +8,6 @@ import {
 } from 'firebase/firestore';
 import { db } from '../config/firebase';
 
-import { 
-  collection, 
-  getDocs, 
-  setDoc, 
-  doc
-} from 'firebase/firestore';
-import { db } from '../config/firebase';
-
 // Sauvegarder les données dans Firestore
 export const saveDataToFirestore = async (userId, data) => {
   try {
