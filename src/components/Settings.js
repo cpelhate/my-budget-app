@@ -1,150 +1,198 @@
-import React from 'react';
-import { updatePassword, reauthenticateWithCredential, EmailAuthProvider } from 'firebase/auth';
-
-export default Settings;
+import React, { useState } from 'react';
+import { auth } from '../config/firebase';
+import {
+  EmailAuthProvider,
+  reauthenticateWithCredential,
+  updatePassword,
+} from 'firebase/auth';
 
 function Settings({ data, setData }) {
-  const handleClearAllData = () => {
-    if (window.confirm('⚠️ Êtes-vous sûr ? Cette action supprimera TOUTES vos données !')) {
-      setData({
-        incomes: [],
-        charges: [],
-        expenses: [],
-        categories: ['Alimentation', 'Transport', 'Logement', 'Loisirs', 'Santé', 'Autres']
-      });
-      alert('✅ Toutes les données ont été supprimées !');
+  const user = auth.currentUser;
+
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [passwordMessage, setPasswordMessage] = useState('');
+  const [passwordError, setPasswordError] = useState('');
+
+  const [newCategory, setNewCategory] = useState('');
+
+  const categories = Array.isArray(data?.categories) ? data.categories : [];
+
+  const validatePassword = (password) => {
+    const regex =
+      /^(?=.*[A-Za-z])(?=.*\d)(?=.*[^A-Za-z\d]).{8,}$/;
+    return regex.test(password);
+  };
+
+  const handleChangePassword = async (e) => {
+    e.preventDefault();
+    setPasswordMessage('');
+    setPasswordError('');
+
+    if (!user || !user.email) {
+      setPasswordError('Utilisateur non connecté.');
+      return;
+    }
+
+    if (!currentPassword || !newPassword || !confirmPassword) {
+      setPasswordError('Merci de remplir tous les champs.');
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      setPasswordError('La confirmation du mot de passe ne correspond pas.');
+      return;
+    }
+
+    if (!validatePassword(newPassword)) {
+      setPasswordError(
+        'Le nouveau mot de passe doit contenir au moins 8 caractères, avec lettres, chiffres et caractère spécial.'
+      );
+      return;
+    }
+
+    try {
+      const credential = EmailAuthProvider.credential(
+        user.email,
+        currentPassword
+      );
+
+      await reauthenticateWithCredential(user, credential);
+      await updatePassword(user, newPassword);
+
+      setPasswordMessage('Mot de passe mis à jour avec succès.');
+      setCurrentPassword('');
+      setNewPassword('');
+      setConfirmPassword('');
+    } catch (error) {
+      setPasswordError(
+        "Impossible de modifier le mot de passe. Vérifie ton mot de passe actuel."
+      );
     }
   };
 
-  const handleExportData = () => {
-    const dataStr = JSON.stringify(data, null, 2);
-    const dataBlob = new Blob([dataStr], { type: 'application/json' });
-    const url = URL.createObjectURL(dataBlob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `budget_backup_${new Date().toISOString().split('T')[0]}.json`;
-    link.click();
-  };
+  const handleAddCategory = () => {
+    const trimmed = newCategory.trim();
 
-  const handleImportData = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        try {
-          const importedData = JSON.parse(event.target.result);
-          setData(importedData);
-          alert('✅ Données importées avec succès !');
-        } catch (error) {
-          alert('❌ Erreur lors de l\'import du fichier');
-        }
-      };
-      reader.readAsText(file);
+    if (!trimmed) return;
+    if (categories.includes(trimmed)) {
+      setNewCategory('');
+      return;
     }
+
+    setData({
+      ...data,
+      categories: [...categories, trimmed],
+    });
+
+    setNewCategory('');
   };
 
-  const UserProfile = ({ user }) => {
-    const [currentPassword, setCurrentPassword] = useState('');
-    const [newPassword, setNewPassword] = useState('');
-    const [confirmPassword, setConfirmPassword] = useState('');
-    const [loading, setLoading] = useState(false);
+  const handleDeleteCategory = (categoryToDelete) => {
+    const updatedCategories = categories.filter(
+      (cat) => cat !== categoryToDelete
+    );
 
-    const handleChangePassword = async () => {
-      if (newPassword !== confirmPassword) {
-        alert('Les nouveaux mots de passe ne correspondent pas');
-        return;
-      }
-      
-      const validation = validatePassword(newPassword);
-      if (!validation.isValid) {
-        alert('Nouveau mot de passe invalide : ' + validation.errors.join(', '));
-        return;
-      }
-
-      try {
-        setLoading(true);
-        const credential = EmailAuthProvider.credential(user.email, currentPassword);
-        await reauthenticateWithCredential(user, credential);
-        await updatePassword(user, newPassword);
-        alert('Mot de passe mis à jour !');
-      } catch (error) {
-        alert('Erreur : ' + error.message);
-      } finally {
-        setLoading(false);
-      }
-    };
-  
+    setData({
+      ...data,
+      categories: updatedCategories,
+    });
+  };
 
   return (
-    <div className="page-container">
+    <div className="settings-page">
       <h2>⚙️ Paramètres</h2>
 
-      <div className="settings-section">
-        <h3>📊 Statistiques générales</h3>
-        <div className="stats-info">
-          <p><strong>Total des revenus :</strong> {data.incomes.reduce((sum, inc) => sum + parseFloat(inc.amount || 0), 0).toFixed(2)} €</p>
-          <p><strong>Total des charges :</strong> {data.charges.reduce((sum, ch) => sum + parseFloat(ch.amount || 0), 0).toFixed(2)} €</p>
-          <p><strong>Total des dépenses :</strong> {data.expenses.reduce((sum, exp) => sum + parseFloat(exp.amount || 0), 0).toFixed(2)} €</p>
-          <p><strong>Nombre de revenus :</strong> {data.incomes.length}</p>
-          <p><strong>Nombre de charges :</strong> {data.charges.length}</p>
-          <p><strong>Nombre de dépenses :</strong> {data.expenses.length}</p>
-          <p><strong>Catégories :</strong> {data.categories.length}</p>
-        </div>
-      </div>
+      <section className="settings-section">
+        <h3>Informations utilisateur</h3>
+        <p>
+          <strong>Email :</strong> {user?.email || 'Non disponible'}
+        </p>
+        <p>
+          <strong>UID :</strong> {user?.uid || 'Non disponible'}
+        </p>
+      </section>
 
-      <div className="settings-section">
-        <h3>👤 Profil utilisateur</h3>
-        <div className="user-card">
-          <p><strong>Email :</strong> {user.email}</p>
-          <p><strong>UID :</strong> {user.uid.slice(0,8)}...</p>
-        </div>
-      </div>
-      
-      <div className="settings-section">
-        <h3>💾 Sauvegarder & Restaurer</h3>
-        <div className="settings-buttons">
-          <button onClick={handleExportData} className="btn btn-secondary">
-            💾 Exporter mes données (JSON)
+      <section className="settings-section">
+        <h3>Changer le mot de passe</h3>
+
+        <form onSubmit={handleChangePassword} className="settings-form">
+          <input
+            type="password"
+            placeholder="Mot de passe actuel"
+            value={currentPassword}
+            onChange={(e) => setCurrentPassword(e.target.value)}
+          />
+
+          <input
+            type="password"
+            placeholder="Nouveau mot de passe"
+            value={newPassword}
+            onChange={(e) => setNewPassword(e.target.value)}
+          />
+
+          <input
+            type="password"
+            placeholder="Confirmer le nouveau mot de passe"
+            value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
+          />
+
+          <button type="submit" className="btn-primary">
+            Mettre à jour le mot de passe
           </button>
-          <label className="btn btn-secondary import-btn">
-            📂 Importer mes données
-            <input 
-              type="file" 
-              accept=".json"
-              onChange={handleImportData}
-              style={{ display: 'none' }}
-            />
-          </label>
-        </div>
-      </div>
+        </form>
 
-      <div className="settings-section danger">
-        <h3>🗑️ Zone dangereuse</h3>
-        <p>Attention : Les actions ci-dessous sont définitives !</p>
-        <button onClick={handleClearAllData} className="btn btn-danger">
-          🗑️ Supprimer TOUTES les données
-        </button>
-      </div>
+        {passwordMessage && (
+          <p style={{ color: 'green', marginTop: '10px' }}>
+            {passwordMessage}
+          </p>
+        )}
 
-      <div className="settings- section password-change">
-        <h4>Changer le mot de passe</h4>
-        <div className="form-group">
-          <label>Mot de passe actuel</label>
-          <input type="password" value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} />
-        </div>
-        <div className="form-group">
-          <label>Nouveau mot de passe</label>
-          <input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} />
-        </div>
-        <div className="form-group">
-          <label>Confirmer le nouveau mot de passe</label>
-          <input type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} />
-        </div>
-        <button onClick={handleChangePassword} className="btn btn-primary" disabled={loading}>
-          {loading ? '⏳ Chargement...' : '🔄 Changer le mot de passe'}
-        </button>
-      </div>
+        {passwordError && (
+          <p style={{ color: 'red', marginTop: '10px' }}>
+            {passwordError}
+          </p>
+        )}
+      </section>
 
+      <section className="settings-section">
+        <h3>Catégories de dépense</h3>
+
+        <div className="category-add">
+          <input
+            type="text"
+            placeholder="Nouvelle catégorie"
+            value={newCategory}
+            onChange={(e) => setNewCategory(e.target.value)}
+          />
+          <button type="button" className="btn-primary" onClick={handleAddCategory}>
+            Ajouter
+          </button>
+        </div>
+
+        {categories.length === 0 ? (
+          <p>Aucune catégorie enregistrée.</p>
+        ) : (
+          <ul className="category-list">
+            {categories.map((category, index) => (
+              <li key={`${category}-${index}`} className="category-item">
+                <span>{category}</span>
+                <button
+                  type="button"
+                  className="btn-delete"
+                  onClick={() => handleDeleteCategory(category)}
+                >
+                  Supprimer
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
     </div>
   );
-  }}
+}
+
+export default Settings;
