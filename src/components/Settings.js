@@ -4,6 +4,7 @@ import {
   EmailAuthProvider,
   reauthenticateWithCredential,
   updatePassword,
+  sendPasswordResetEmail,
 } from 'firebase/auth';
 
 function Settings({ data, setData }) {
@@ -12,16 +13,18 @@ function Settings({ data, setData }) {
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+
   const [passwordMessage, setPasswordMessage] = useState('');
   const [passwordError, setPasswordError] = useState('');
+  const [resetMessage, setResetMessage] = useState('');
+  const [resetError, setResetError] = useState('');
 
   const [newCategory, setNewCategory] = useState('');
 
   const categories = Array.isArray(data?.categories) ? data.categories : [];
 
   const validatePassword = (password) => {
-    const regex =
-      /^(?=.*[A-Za-z])(?=.*\d)(?=.*[^A-Za-z\d]).{8,}$/;
+    const regex = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[^A-Za-z\d]).{8,}$/;
     return regex.test(password);
   };
 
@@ -29,6 +32,8 @@ function Settings({ data, setData }) {
     e.preventDefault();
     setPasswordMessage('');
     setPasswordError('');
+    setResetMessage('');
+    setResetError('');
 
     if (!user || !user.email) {
       setPasswordError('Utilisateur non connecté.');
@@ -68,6 +73,29 @@ function Settings({ data, setData }) {
     } catch (error) {
       setPasswordError(
         "Impossible de modifier le mot de passe. Vérifie ton mot de passe actuel."
+      );
+    }
+  };
+
+  const handleSendResetEmail = async () => {
+    setResetMessage('');
+    setResetError('');
+    setPasswordMessage('');
+    setPasswordError('');
+
+    if (!user || !user.email) {
+      setResetError("Aucun email utilisateur n'est disponible.");
+      return;
+    }
+
+    try {
+      await sendPasswordResetEmail(auth, user.email);
+      setResetMessage(
+        `Un email de réinitialisation a été envoyé à ${user.email}.`
+      );
+    } catch (error) {
+      setResetError(
+        "Impossible d'envoyer l'email de réinitialisation."
       );
     }
   };
@@ -115,7 +143,7 @@ function Settings({ data, setData }) {
       </section>
 
       <section className="settings-section">
-        <h3>Changer le mot de passe</h3>
+        <h3>Sécurité du compte</h3>
 
         <form onSubmit={handleChangePassword} className="settings-form">
           <input
@@ -144,6 +172,16 @@ function Settings({ data, setData }) {
           </button>
         </form>
 
+        <div style={{ marginTop: '12px' }}>
+          <button
+            type="button"
+            className="btn-secondary"
+            onClick={handleSendResetEmail}
+          >
+            Envoyer un email de réinitialisation
+          </button>
+        </div>
+
         {passwordMessage && (
           <p style={{ color: 'green', marginTop: '10px' }}>
             {passwordMessage}
@@ -153,6 +191,18 @@ function Settings({ data, setData }) {
         {passwordError && (
           <p style={{ color: 'red', marginTop: '10px' }}>
             {passwordError}
+          </p>
+        )}
+
+        {resetMessage && (
+          <p style={{ color: 'green', marginTop: '10px' }}>
+            {resetMessage}
+          </p>
+        )}
+
+        {resetError && (
+          <p style={{ color: 'red', marginTop: '10px' }}>
+            {resetError}
           </p>
         )}
       </section>
@@ -167,7 +217,11 @@ function Settings({ data, setData }) {
             value={newCategory}
             onChange={(e) => setNewCategory(e.target.value)}
           />
-          <button type="button" className="btn-primary" onClick={handleAddCategory}>
+          <button
+            type="button"
+            className="btn-primary"
+            onClick={handleAddCategory}
+          >
             Ajouter
           </button>
         </div>
