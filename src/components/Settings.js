@@ -1,4 +1,5 @@
 import React from 'react';
+import { updatePassword, reauthenticateWithCredential, EmailAuthProvider } from 'firebase/auth';
 
 function Settings({ data, setData }) {
   const handleClearAllData = () => {
@@ -40,6 +41,37 @@ function Settings({ data, setData }) {
     }
   };
 
+  const UserProfile = ({ user }) => {
+    const [currentPassword, setCurrentPassword] = useState('');
+    const [newPassword, setNewPassword] = useState('');
+    const [confirmPassword, setConfirmPassword] = useState('');
+    const [loading, setLoading] = useState(false);
+
+    const handleChangePassword = async () => {
+      if (newPassword !== confirmPassword) {
+        alert('Les nouveaux mots de passe ne correspondent pas');
+        return;
+      }
+      
+      const validation = validatePassword(newPassword);
+      if (!validation.isValid) {
+        alert('Nouveau mot de passe invalide : ' + validation.errors.join(', '));
+        return;
+      }
+
+      try {
+        setLoading(true);
+        const credential = EmailAuthProvider.credential(user.email, currentPassword);
+        await reauthenticateWithCredential(user, credential);
+        await updatePassword(user, newPassword);
+        alert('Mot de passe mis à jour !');
+      } catch (error) {
+        alert('Erreur : ' + error.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
   return (
     <div className="page-container">
       <h2>⚙️ Paramètres</h2>
@@ -55,6 +87,31 @@ function Settings({ data, setData }) {
           <p><strong>Nombre de dépenses :</strong> {data.expenses.length}</p>
           <p><strong>Catégories :</strong> {data.categories.length}</p>
         </div>
+      </div>
+
+      <div className="settings-section">
+      <h3>👤 Profil utilisateur</h3>
+      <div className="user-card">
+        <p><strong>Email :</strong> {user.email}</p>
+        <p><strong>UID :</strong> {user.uid.slice(0,8)}...</p>
+      </div>
+      
+      <h4>Changer le mot de passe</h4>
+      <div className="form-group">
+        <label>Mot de passe actuel</label>
+        <input type="password" value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} />
+      </div>
+      <div className="form-group">
+        <label>Nouveau mot de passe</label>
+        <input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} />
+      </div>
+      <div className="form-group">
+        <label>Confirmer le nouveau mot de passe</label>
+        <input type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} />
+      </div>
+      <button onClick={handleChangePassword} className="btn btn-primary" disabled={loading}>
+        {loading ? '⏳ Chargement...' : '🔄 Changer le mot de passe'}
+      </button>
       </div>
 
       <div className="settings-section">
