@@ -96,24 +96,6 @@ function Settings({ data, setData }) {
         <p><strong>UID :</strong> {user.uid.slice(0,8)}...</p>
       </div>
       
-      <h4>Changer le mot de passe</h4>
-      <div className="form-group">
-        <label>Mot de passe actuel</label>
-        <input type="password" value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} />
-      </div>
-      <div className="form-group">
-        <label>Nouveau mot de passe</label>
-        <input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} />
-      </div>
-      <div className="form-group">
-        <label>Confirmer le nouveau mot de passe</label>
-        <input type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} />
-      </div>
-      <button onClick={handleChangePassword} className="btn btn-primary" disabled={loading}>
-        {loading ? '⏳ Chargement...' : '🔄 Changer le mot de passe'}
-      </button>
-      </div>
-
       <div className="settings-section">
         <h3>💾 Sauvegarder & Restaurer</h3>
         <div className="settings-buttons">
@@ -139,6 +121,26 @@ function Settings({ data, setData }) {
           🗑️ Supprimer TOUTES les données
         </button>
       </div>
+
+      <div className="settings- section password-change">
+      <h4>Changer le mot de passe</h4>
+      <div className="form-group">
+        <label>Mot de passe actuel</label>
+        <input type="password" value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} />
+      </div>
+      <div className="form-group">
+        <label>Nouveau mot de passe</label>
+        <input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} />
+      </div>
+      <div className="form-group">
+        <label>Confirmer le nouveau mot de passe</label>
+        <input type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} />
+      </div>
+      <button onClick={handleChangePassword} className="btn btn-primary" disabled={loading}>
+        {loading ? '⏳ Chargement...' : '🔄 Changer le mot de passe'}
+      </button>
+      </div>
+
     </div>
   );
 }
