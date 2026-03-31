@@ -620,3 +620,16 @@ body {
   cursor: pointer;
 }
 
+.form-card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-width: 500px;
+}
+
+.form-card input,
+.form-card select {
+  padding: 10px 12px;
+  border: 1px solid #d0d7de;
+  border-radius: 8px;
+}
