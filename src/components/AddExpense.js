@@ -7,10 +7,6 @@ function AddExpense({ data, setData, categories = [] }) {
   const [category, setCategory] = useState('');
   const [newCategory, setNewCategory] = useState('');
 
-  const alreadyExists = updatedCategories.some(
-  (cat) => cat.trim().toLowerCase() === trimmedCategory.toLowerCase()
-  );
-
   const handleSubmit = (e) => {
     e.preventDefault();
 
